@@ -103,7 +103,20 @@ enum
         TSX,
         TXA,
         TXS,
-        TYA
+        TYA,
+
+        /* 65C02 instructions */
+        /* http://www.llx.com/~nparker/a2/opcodes.html */
+        BRA,
+        STZ,
+        PHX,
+        PHY,
+        PLX,
+        PLY,
+        INA,
+        DEA
+
+
 };
 enum {
         A_ACC,
@@ -113,6 +126,7 @@ enum {
         A_ABY,
         A_IMM,
         A_IND,
+        A_IAX,
         A_INX,
         A_INY,
         A_REL,

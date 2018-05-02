@@ -13,21 +13,21 @@ static uint16_t invalid_instruction = 0;
 /* acquired from http://e-tradition.net/bytes/6502/6502_instruction_set.html */
 static Opcode opc_table[0x100] = {
         {BRK, A_IMP}, {ORA, A_INX}, {INV, A_IMP}, {INV, A_IMP}, {INV, A_IMP}, {ORA, A_ZPG}, {ASL, A_ZPG}, {INV, A_IMP}, {PHP, A_IMP}, {ORA, A_IMM}, {ASC, A_IMP}, {INV, A_IMP}, {INV, A_IMP}, {ORA, A_ABS}, {ASL, A_ABS}, {INV, A_IMP},
-        {BPL, A_REL}, {ORA, A_INY}, {INV, A_IMP}, {INV, A_IMP}, {INV, A_IMP}, {ORA, A_ZPX}, {ASL, A_ZPX}, {INV, A_IMP}, {CLC, A_IMP}, {ORA, A_ABY}, {INV, A_IMP}, {INV, A_IMP}, {INV, A_IMP}, {ORA, A_ABX}, {ASL, A_ABX}, {INV, A_IMP}, 
+        {BPL, A_REL}, {ORA, A_INY}, {INV, A_IMP}, {INV, A_IMP}, {INV, A_IMP}, {ORA, A_ZPX}, {ASL, A_ZPX}, {INV, A_IMP}, {CLC, A_IMP}, {ORA, A_ABY}, {INA, A_IMP}, {INV, A_IMP}, {INV, A_IMP}, {ORA, A_ABX}, {ASL, A_ABX}, {INV, A_IMP}, 
         {JSR, A_ABS}, {AND, A_INX}, {INV, A_IMP}, {INV, A_IMP}, {BIT, A_ZPG}, {AND, A_ZPG}, {ROL, A_ZPG}, {INV, A_IMP}, {PLP, A_IMP}, {AND, A_IMM}, {RLC, A_IMP}, {INV, A_IMP}, {BIT, A_ABS}, {AND, A_ABS}, {ROL, A_ABS}, {INV, A_IMP}, 
-        {BMI, A_REL}, {AND, A_INY}, {INV, A_IMP}, {INV, A_IMP}, {INV, A_IMP}, {AND, A_ZPX}, {ROL, A_ZPX}, {INV, A_IMP}, {SEC, A_IMP}, {AND, A_ABY}, {INV, A_IMP}, {INV, A_IMP}, {INV, A_IMP}, {AND, A_ABX}, {ROL, A_ABX}, {INV, A_IMP},
+        {BMI, A_REL}, {AND, A_INY}, {INV, A_IMP}, {INV, A_IMP}, {INV, A_IMP}, {AND, A_ZPX}, {ROL, A_ZPX}, {INV, A_IMP}, {SEC, A_IMP}, {AND, A_ABY}, {DEA, A_IMP}, {INV, A_IMP}, {INV, A_IMP}, {AND, A_ABX}, {ROL, A_ABX}, {INV, A_IMP},
         {RTI, A_IMP}, {EOR, A_INX}, {INV, A_IMP}, {INV, A_IMP}, {INV, A_IMP}, {EOR, A_ZPG}, {LSR, A_ZPG}, {INV, A_IMP}, {PHA, A_IMP}, {EOR, A_IMM}, {LSC, A_IMP}, {INV, A_IMP}, {JMP, A_ABS}, {EOR, A_ABS}, {LSR, A_ABS}, {INV, A_IMP},
-        {BVC, A_REL}, {EOR, A_INY}, {INV, A_IMP}, {INV, A_IMP}, {INV, A_IMP}, {EOR, A_ZPX}, {LSR, A_ZPX}, {INV, A_IMP}, {CLI, A_IMP}, {EOR, A_ABY}, {INV, A_IMP}, {INV, A_IMP}, {INV, A_IMP}, {EOR, A_ABX}, {LSR, A_ABX}, {INV, A_IMP}, 
+        {BVC, A_REL}, {EOR, A_INY}, {INV, A_IMP}, {INV, A_IMP}, {INV, A_IMP}, {EOR, A_ZPX}, {LSR, A_ZPX}, {INV, A_IMP}, {CLI, A_IMP}, {EOR, A_ABY}, {PHY, A_IMP}, {INV, A_IMP}, {INV, A_IMP}, {EOR, A_ABX}, {LSR, A_ABX}, {INV, A_IMP}, 
         {RTS, A_IMP}, {ADC, A_INX}, {INV, A_IMP}, {INV, A_IMP}, {INV, A_IMP}, {ADC, A_ZPG}, {ROR, A_ZPG}, {INV, A_IMP}, {PLA, A_IMP}, {ADC, A_IMM}, {RRC, A_IMP}, {INV, A_IMP}, {JMP, A_IND}, {ADC, A_ABS}, {ROR, A_ABS}, {INV, A_IMP},
-        {BVS, A_REL}, {ADC, A_INY}, {INV, A_IMP}, {INV, A_IMP}, {INV, A_IMP}, {ADC, A_ZPX}, {ROR, A_ZPX}, {INV, A_IMP}, {SEI, A_IMP}, {ADC, A_ABY}, {INV, A_IMP}, {INV, A_IMP}, {INV, A_IMP}, {ADC, A_ABX}, {ROR, A_ABX}, {INV, A_IMP}, 
-        {INV, A_IMP}, {STA, A_INX}, {INV, A_IMP}, {INV, A_IMP}, {STY, A_ZPG}, {STA, A_ZPG}, {STX, A_ZPG}, {INV, A_IMP}, {DEY, A_IMP}, {INV, A_IMP}, {TXA, A_IMP}, {INV, A_IMP}, {STY, A_ABS}, {STA, A_ABS}, {STX, A_ABS}, {INV, A_IMP}, 
-        {BCC, A_REL}, {STA, A_INY}, {INV, A_IMP}, {INV, A_IMP}, {STY, A_ZPX}, {STA, A_ZPX}, {STX, A_ZPY}, {INV, A_IMP}, {TYA, A_IMP}, {STA, A_ABY}, {TXS, A_IMP}, {INV, A_IMP}, {INV, A_IMP}, {STA, A_ABX}, {INV, A_IMP}, {INV, A_IMP}, 
+        {BVS, A_REL}, {ADC, A_INY}, {INV, A_IMP}, {INV, A_IMP}, {INV, A_IMP}, {ADC, A_ZPX}, {ROR, A_ZPX}, {INV, A_IMP}, {SEI, A_IMP}, {ADC, A_ABY}, {PLY, A_IMP}, {INV, A_IMP}, {JMP, A_IAX}, {ADC, A_ABX}, {ROR, A_ABX}, {INV, A_IMP}, 
+        {BRA, A_REL}, {STA, A_INX}, {INV, A_IMP}, {INV, A_IMP}, {STY, A_ZPG}, {STA, A_ZPG}, {STX, A_ZPG}, {INV, A_IMP}, {DEY, A_IMP}, {INV, A_IMP}, {TXA, A_IMP}, {INV, A_IMP}, {STY, A_ABS}, {STA, A_ABS}, {STX, A_ABS}, {INV, A_IMP}, 
+        {BCC, A_REL}, {STA, A_INY}, {INV, A_IMP}, {INV, A_IMP}, {STY, A_ZPX}, {STA, A_ZPX}, {STX, A_ZPY}, {INV, A_IMP}, {TYA, A_IMP}, {STA, A_ABY}, {TXS, A_IMP}, {INV, A_IMP}, {STZ, A_ABS}, {STA, A_ABX}, {STZ, A_ABX}, {INV, A_IMP}, 
         {LDY, A_IMM}, {LDA, A_INX}, {LDX, A_IMM}, {INV, A_IMP}, {LDY, A_ZPG}, {LDA, A_ZPG}, {LDX, A_ZPG}, {INV, A_IMP}, {TAY, A_IMP}, {LDA, A_IMM}, {TAX, A_IMP}, {INV, A_IMP}, {LDY, A_ABS}, {LDA, A_ABS}, {LDX, A_ABS}, {INV, A_IMP},
         {BCS, A_REL}, {LDA, A_INY}, {INV, A_IMP}, {INV, A_IMP}, {LDY, A_ZPX}, {LDA, A_ZPX}, {LDX, A_ZPY}, {INV, A_IMP}, {CLV, A_IMP}, {LDA, A_ABY}, {TSX, A_IMP}, {INV, A_IMP}, {LDY, A_ABX}, {LDA, A_ABX}, {LDX, A_ABY}, {INV, A_IMP}, 
         {CPY, A_IMM}, {CMP, A_INX}, {INV, A_IMP}, {INV, A_IMP}, {CPY, A_ZPG}, {CMP, A_ZPG}, {DEC, A_ZPG}, {INV, A_IMP}, {INY, A_IMP}, {CMP, A_IMM}, {DEX, A_IMP}, {INV, A_IMP}, {CPY, A_ABS}, {CMP, A_ABS}, {DEC, A_ABS}, {INV, A_IMP},
-        {BNE, A_REL}, {CMP, A_INY}, {INV, A_IMP}, {INV, A_IMP}, {INV, A_IMP}, {CMP, A_ZPX}, {DEC, A_ZPX}, {INV, A_IMP}, {CLD, A_IMP}, {CMP, A_ABY}, {INV, A_IMP}, {INV, A_IMP}, {INV, A_IMP}, {CMP, A_ABX}, {DEC, A_ABX}, {INV, A_IMP}, 
+        {BNE, A_REL}, {CMP, A_INY}, {INV, A_IMP}, {INV, A_IMP}, {INV, A_IMP}, {CMP, A_ZPX}, {DEC, A_ZPX}, {INV, A_IMP}, {CLD, A_IMP}, {CMP, A_ABY}, {PHX, A_IMP}, {INV, A_IMP}, {INV, A_IMP}, {CMP, A_ABX}, {DEC, A_ABX}, {INV, A_IMP}, 
         {CPX, A_IMM}, {SBC, A_INX}, {INV, A_IMP}, {INV, A_IMP}, {CPX, A_ZPG}, {SBC, A_ZPG}, {INC, A_ZPG}, {INV, A_IMP}, {INX, A_IMP}, {SBC, A_IMM}, {NOP, A_IMP}, {INV, A_IMP}, {CPX, A_ABS}, {SBC, A_ABS}, {INC, A_ABS}, {INV, A_IMP},
-        {BEQ, A_REL}, {SBC, A_INY}, {INV, A_IMP}, {INV, A_IMP}, {INV, A_IMP}, {SBC, A_ZPX}, {INC, A_ZPX}, {INV, A_IMP}, {SED, A_IMP}, {SBC, A_ABY}, {INV, A_IMP}, {INV, A_IMP}, {INV, A_IMP}, {SBC, A_ABX}, {INC, A_ABX}, {INV, A_IMP}
+        {BEQ, A_REL}, {SBC, A_INY}, {INV, A_IMP}, {INV, A_IMP}, {INV, A_IMP}, {SBC, A_ZPX}, {INC, A_ZPX}, {INV, A_IMP}, {SED, A_IMP}, {SBC, A_ABY}, {PLX, A_IMP}, {INV, A_IMP}, {INV, A_IMP}, {SBC, A_ABX}, {INC, A_ABX}, {INV, A_IMP}
 };
 
 static void
@@ -73,6 +73,12 @@ get_addr(int adm)
                         high = memory[pc++];
                         efflow = memory[low + (high << 8)];
                         effhigh = memory[low + (high << 8) + 1];
+                        return efflow + (effhigh << 8);
+                case A_IAX:
+                        low = memory[pc++];
+                        high = memory[pc++];
+                        efflow = memory[low + (high << 8) + x];
+                        effhigh = memory[low + (high << 8) + 1 + x];
                         return efflow + (effhigh << 8);
                 case A_INX:
                         low = (memory[pc++] + x) % 0xFF;
@@ -186,6 +192,9 @@ run_op(Opcode op)
                         if(getstat(OVERFLOW))
                                 pc = addr;
                         return;
+                case BRA:
+                        pc = addr;
+                        return;
                 case CLC:
                         cbi(sr, CARRY);
                         return;
@@ -221,6 +230,11 @@ run_op(Opcode op)
                         setstat(NEGATIVE, memory[addr] & 0x80);
                         setstat(ZERO, !memory[addr]);
                         return;
+                case DEA:
+                        ac--;
+                        setstat(NEGATIVE, ac & 0x80);
+                        setstat(ZERO, !ac);
+                        return;
                 case DEX:
                         x--;
                         setstat(NEGATIVE, x & 0x80);
@@ -240,6 +254,11 @@ run_op(Opcode op)
                         memory[addr]++;
                         setstat(NEGATIVE, memory[addr] & 0x80);
                         setstat(ZERO, !memory[addr]);
+                        return;
+                case INA:
+                        ac++;
+                        setstat(NEGATIVE, ac & 0x80);
+                        setstat(ZERO, !ac);
                         return;
                 case INX:
                         x++;
@@ -297,6 +316,12 @@ run_op(Opcode op)
                 case PHA:
                         hws_push(ac);
                         return;
+                case PHX:
+                        hws_push(x);
+                        return;
+                case PHY:
+                        hws_push(y);
+                        return;
                 case PHP:
                         hws_push(sr);
                         return;
@@ -304,6 +329,16 @@ run_op(Opcode op)
                         ac = hws_pop();
                         setstat(NEGATIVE, ac & 0x80);
                         setstat(ZERO, !ac);
+                        return;
+                case PLX:
+                        x = hws_pop();
+                        setstat(NEGATIVE, x & 0x80);
+                        setstat(ZERO, !x);
+                        return;
+                case PLY:
+                        y = hws_pop();
+                        setstat(NEGATIVE, y & 0x80);
+                        setstat(ZERO, !y);
                         return;
                 case PLP:
                         sr = hws_pop();
@@ -383,6 +418,9 @@ run_op(Opcode op)
                         return;
                 case STX:
                         memory[addr] = x;
+                        return;
+                case STZ:
+                        memory[addr] = 0x00;
                         return;
                 case STY:
                         memory[addr] = y;
