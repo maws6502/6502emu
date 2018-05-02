@@ -30,6 +30,7 @@ runCPU()
                         inchar = 0;
                 }
         }
+        return;
 }
 
 int

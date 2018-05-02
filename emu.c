@@ -54,9 +54,6 @@ get_addr(int adm)
         uint8_t low, high, efflow, effhigh;
         int8_t offset;
         switch (adm) {
-                case A_ACC:
-                case A_IMP:
-                        return 0;
                 case A_ABS:
                         low = memory[pc++];
                         high = memory[pc++];
@@ -94,6 +91,10 @@ get_addr(int adm)
                         return (memory[pc++] + x) % 0xFF;
                 case A_ZPY:
                         return (memory[pc++] + y) % 0xFF;
+                case A_ACC:
+                case A_IMP:
+                default:
+                        return 0;
         }
 }
 
