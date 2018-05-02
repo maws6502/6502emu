@@ -15,8 +15,9 @@ void *
 runCPU()
 {
         for(;;) {
-                if (cycle()) {
-                        printf("INVALID INSTRUCTION. HALTING\n");
+                uint16_t i;
+                if (i = cycle()) {
+                        printf("INVALID INSTRUCTION. HALTING AT %x\n", i);
                         break;
                 }
                 if(memory[0xFF0F]) {

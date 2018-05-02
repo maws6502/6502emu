@@ -10,7 +10,7 @@ uint8_t memory[0x10000];
 void reset_cpu(void);
 void irq(void);
 void nmi(void);
-int cycle(void);
+uint16_t cycle(void);
 
 struct opcode {
         int op;

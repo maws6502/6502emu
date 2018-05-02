@@ -8,7 +8,7 @@
 
 static uint16_t pc;
 static uint8_t ac, x, y, sr, sp;
-int invalid_instruction = 0;
+static uint16_t invalid_instruction = 0;
 
 /* acquired from http://e-tradition.net/bytes/6502/6502_instruction_set.html */
 static Opcode opc_table[0x100] = {
@@ -418,12 +418,12 @@ run_op(Opcode op)
                         setstat(ZERO, !ac);
                         return;
                 case INV:
-                        invalid_instruction = 1;
+                        invalid_instruction = pc;
                         return;
         }
 }
 
-int
+uint16_t
 cycle(void)
 {
         Opcode op;
