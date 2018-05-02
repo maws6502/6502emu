@@ -1,0 +1,5 @@
+#IO
+$FF0F: char out flag
+$FF0E: char out
+$FF0D: char in flag
+$FF0C: char in
