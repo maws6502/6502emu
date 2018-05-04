@@ -114,7 +114,9 @@ enum
         PLX,
         PLY,
         INA,
-        DEA
+        DEA,
+        TRB,
+        TSB
 
 
 };
@@ -129,6 +131,7 @@ enum {
         A_IAX,
         A_INX,
         A_INY,
+        A_INZ,
         A_REL,
         A_ZPG,
         A_ZPX,

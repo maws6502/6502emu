@@ -12,22 +12,22 @@ static uint16_t invalid_instruction = 0;
 
 /* acquired from http://e-tradition.net/bytes/6502/6502_instruction_set.html */
 static Opcode opc_table[0x100] = {
-        {BRK, A_IMP}, {ORA, A_INX}, {INV, A_IMP}, {INV, A_IMP}, {INV, A_IMP}, {ORA, A_ZPG}, {ASL, A_ZPG}, {INV, A_IMP}, {PHP, A_IMP}, {ORA, A_IMM}, {ASC, A_IMP}, {INV, A_IMP}, {INV, A_IMP}, {ORA, A_ABS}, {ASL, A_ABS}, {INV, A_IMP},
-        {BPL, A_REL}, {ORA, A_INY}, {INV, A_IMP}, {INV, A_IMP}, {INV, A_IMP}, {ORA, A_ZPX}, {ASL, A_ZPX}, {INV, A_IMP}, {CLC, A_IMP}, {ORA, A_ABY}, {INA, A_IMP}, {INV, A_IMP}, {INV, A_IMP}, {ORA, A_ABX}, {ASL, A_ABX}, {INV, A_IMP}, 
+        {BRK, A_IMP}, {ORA, A_INX}, {INV, A_IMP}, {INV, A_IMP}, {TSB, A_ZPG}, {ORA, A_ZPG}, {ASL, A_ZPG}, {INV, A_IMP}, {PHP, A_IMP}, {ORA, A_IMM}, {ASC, A_IMP}, {INV, A_IMP}, {TSB, A_ABS}, {ORA, A_ABS}, {ASL, A_ABS}, {INV, A_IMP},
+        {BPL, A_REL}, {ORA, A_INY}, {ORA, A_INZ}, {INV, A_IMP}, {TRB, A_ZPG}, {ORA, A_ZPX}, {ASL, A_ZPX}, {INV, A_IMP}, {CLC, A_IMP}, {ORA, A_ABY}, {INA, A_IMP}, {INV, A_IMP}, {TRB, A_ABS}, {ORA, A_ABX}, {ASL, A_ABX}, {INV, A_IMP}, 
         {JSR, A_ABS}, {AND, A_INX}, {INV, A_IMP}, {INV, A_IMP}, {BIT, A_ZPG}, {AND, A_ZPG}, {ROL, A_ZPG}, {INV, A_IMP}, {PLP, A_IMP}, {AND, A_IMM}, {RLC, A_IMP}, {INV, A_IMP}, {BIT, A_ABS}, {AND, A_ABS}, {ROL, A_ABS}, {INV, A_IMP}, 
-        {BMI, A_REL}, {AND, A_INY}, {INV, A_IMP}, {INV, A_IMP}, {INV, A_IMP}, {AND, A_ZPX}, {ROL, A_ZPX}, {INV, A_IMP}, {SEC, A_IMP}, {AND, A_ABY}, {DEA, A_IMP}, {INV, A_IMP}, {INV, A_IMP}, {AND, A_ABX}, {ROL, A_ABX}, {INV, A_IMP},
+        {BMI, A_REL}, {AND, A_INY}, {AND, A_INZ}, {INV, A_IMP}, {BIT, A_ZPX}, {AND, A_ZPX}, {ROL, A_ZPX}, {INV, A_IMP}, {SEC, A_IMP}, {AND, A_ABY}, {DEA, A_IMP}, {INV, A_IMP}, {BIT, A_ABX}, {AND, A_ABX}, {ROL, A_ABX}, {INV, A_IMP},
         {RTI, A_IMP}, {EOR, A_INX}, {INV, A_IMP}, {INV, A_IMP}, {INV, A_IMP}, {EOR, A_ZPG}, {LSR, A_ZPG}, {INV, A_IMP}, {PHA, A_IMP}, {EOR, A_IMM}, {LSC, A_IMP}, {INV, A_IMP}, {JMP, A_ABS}, {EOR, A_ABS}, {LSR, A_ABS}, {INV, A_IMP},
-        {BVC, A_REL}, {EOR, A_INY}, {INV, A_IMP}, {INV, A_IMP}, {INV, A_IMP}, {EOR, A_ZPX}, {LSR, A_ZPX}, {INV, A_IMP}, {CLI, A_IMP}, {EOR, A_ABY}, {PHY, A_IMP}, {INV, A_IMP}, {INV, A_IMP}, {EOR, A_ABX}, {LSR, A_ABX}, {INV, A_IMP}, 
-        {RTS, A_IMP}, {ADC, A_INX}, {INV, A_IMP}, {INV, A_IMP}, {INV, A_IMP}, {ADC, A_ZPG}, {ROR, A_ZPG}, {INV, A_IMP}, {PLA, A_IMP}, {ADC, A_IMM}, {RRC, A_IMP}, {INV, A_IMP}, {JMP, A_IND}, {ADC, A_ABS}, {ROR, A_ABS}, {INV, A_IMP},
-        {BVS, A_REL}, {ADC, A_INY}, {INV, A_IMP}, {INV, A_IMP}, {INV, A_IMP}, {ADC, A_ZPX}, {ROR, A_ZPX}, {INV, A_IMP}, {SEI, A_IMP}, {ADC, A_ABY}, {PLY, A_IMP}, {INV, A_IMP}, {JMP, A_IAX}, {ADC, A_ABX}, {ROR, A_ABX}, {INV, A_IMP}, 
-        {BRA, A_REL}, {STA, A_INX}, {INV, A_IMP}, {INV, A_IMP}, {STY, A_ZPG}, {STA, A_ZPG}, {STX, A_ZPG}, {INV, A_IMP}, {DEY, A_IMP}, {INV, A_IMP}, {TXA, A_IMP}, {INV, A_IMP}, {STY, A_ABS}, {STA, A_ABS}, {STX, A_ABS}, {INV, A_IMP}, 
-        {BCC, A_REL}, {STA, A_INY}, {INV, A_IMP}, {INV, A_IMP}, {STY, A_ZPX}, {STA, A_ZPX}, {STX, A_ZPY}, {INV, A_IMP}, {TYA, A_IMP}, {STA, A_ABY}, {TXS, A_IMP}, {INV, A_IMP}, {STZ, A_ABS}, {STA, A_ABX}, {STZ, A_ABX}, {INV, A_IMP}, 
+        {BVC, A_REL}, {EOR, A_INY}, {EOR, A_INZ}, {INV, A_IMP}, {INV, A_IMP}, {EOR, A_ZPX}, {LSR, A_ZPX}, {INV, A_IMP}, {CLI, A_IMP}, {EOR, A_ABY}, {PHY, A_IMP}, {INV, A_IMP}, {INV, A_IMP}, {EOR, A_ABX}, {LSR, A_ABX}, {INV, A_IMP}, 
+        {RTS, A_IMP}, {ADC, A_INX}, {INV, A_IMP}, {INV, A_IMP}, {STZ, A_ZPG}, {ADC, A_ZPG}, {ROR, A_ZPG}, {INV, A_IMP}, {PLA, A_IMP}, {ADC, A_IMM}, {RRC, A_IMP}, {INV, A_IMP}, {JMP, A_IND}, {ADC, A_ABS}, {ROR, A_ABS}, {INV, A_IMP},
+        {BVS, A_REL}, {ADC, A_INY}, {ADC, A_INZ}, {INV, A_IMP}, {STZ, A_ZPX}, {ADC, A_ZPX}, {ROR, A_ZPX}, {INV, A_IMP}, {SEI, A_IMP}, {ADC, A_ABY}, {PLY, A_IMP}, {INV, A_IMP}, {JMP, A_IAX}, {ADC, A_ABX}, {ROR, A_ABX}, {INV, A_IMP}, 
+        {BRA, A_REL}, {STA, A_INX}, {INV, A_IMP}, {INV, A_IMP}, {STY, A_ZPG}, {STA, A_ZPG}, {STX, A_ZPG}, {INV, A_IMP}, {DEY, A_IMP}, {BIT, A_IMM}, {TXA, A_IMP}, {INV, A_IMP}, {STY, A_ABS}, {STA, A_ABS}, {STX, A_ABS}, {INV, A_IMP}, 
+        {BCC, A_REL}, {STA, A_INY}, {STA, A_INZ}, {INV, A_IMP}, {STY, A_ZPX}, {STA, A_ZPX}, {STX, A_ZPY}, {INV, A_IMP}, {TYA, A_IMP}, {STA, A_ABY}, {TXS, A_IMP}, {INV, A_IMP}, {STZ, A_ABS}, {STA, A_ABX}, {STZ, A_ABX}, {INV, A_IMP}, 
         {LDY, A_IMM}, {LDA, A_INX}, {LDX, A_IMM}, {INV, A_IMP}, {LDY, A_ZPG}, {LDA, A_ZPG}, {LDX, A_ZPG}, {INV, A_IMP}, {TAY, A_IMP}, {LDA, A_IMM}, {TAX, A_IMP}, {INV, A_IMP}, {LDY, A_ABS}, {LDA, A_ABS}, {LDX, A_ABS}, {INV, A_IMP},
-        {BCS, A_REL}, {LDA, A_INY}, {INV, A_IMP}, {INV, A_IMP}, {LDY, A_ZPX}, {LDA, A_ZPX}, {LDX, A_ZPY}, {INV, A_IMP}, {CLV, A_IMP}, {LDA, A_ABY}, {TSX, A_IMP}, {INV, A_IMP}, {LDY, A_ABX}, {LDA, A_ABX}, {LDX, A_ABY}, {INV, A_IMP}, 
+        {BCS, A_REL}, {LDA, A_INY}, {LDA, A_INZ}, {INV, A_IMP}, {LDY, A_ZPX}, {LDA, A_ZPX}, {LDX, A_ZPY}, {INV, A_IMP}, {CLV, A_IMP}, {LDA, A_ABY}, {TSX, A_IMP}, {INV, A_IMP}, {LDY, A_ABX}, {LDA, A_ABX}, {LDX, A_ABY}, {INV, A_IMP}, 
         {CPY, A_IMM}, {CMP, A_INX}, {INV, A_IMP}, {INV, A_IMP}, {CPY, A_ZPG}, {CMP, A_ZPG}, {DEC, A_ZPG}, {INV, A_IMP}, {INY, A_IMP}, {CMP, A_IMM}, {DEX, A_IMP}, {INV, A_IMP}, {CPY, A_ABS}, {CMP, A_ABS}, {DEC, A_ABS}, {INV, A_IMP},
-        {BNE, A_REL}, {CMP, A_INY}, {INV, A_IMP}, {INV, A_IMP}, {INV, A_IMP}, {CMP, A_ZPX}, {DEC, A_ZPX}, {INV, A_IMP}, {CLD, A_IMP}, {CMP, A_ABY}, {PHX, A_IMP}, {INV, A_IMP}, {INV, A_IMP}, {CMP, A_ABX}, {DEC, A_ABX}, {INV, A_IMP}, 
+        {BNE, A_REL}, {CMP, A_INY}, {CMP, A_INZ}, {INV, A_IMP}, {INV, A_IMP}, {CMP, A_ZPX}, {DEC, A_ZPX}, {INV, A_IMP}, {CLD, A_IMP}, {CMP, A_ABY}, {PHX, A_IMP}, {INV, A_IMP}, {INV, A_IMP}, {CMP, A_ABX}, {DEC, A_ABX}, {INV, A_IMP}, 
         {CPX, A_IMM}, {SBC, A_INX}, {INV, A_IMP}, {INV, A_IMP}, {CPX, A_ZPG}, {SBC, A_ZPG}, {INC, A_ZPG}, {INV, A_IMP}, {INX, A_IMP}, {SBC, A_IMM}, {NOP, A_IMP}, {INV, A_IMP}, {CPX, A_ABS}, {SBC, A_ABS}, {INC, A_ABS}, {INV, A_IMP},
-        {BEQ, A_REL}, {SBC, A_INY}, {INV, A_IMP}, {INV, A_IMP}, {INV, A_IMP}, {SBC, A_ZPX}, {INC, A_ZPX}, {INV, A_IMP}, {SED, A_IMP}, {SBC, A_ABY}, {PLX, A_IMP}, {INV, A_IMP}, {INV, A_IMP}, {SBC, A_ABX}, {INC, A_ABX}, {INV, A_IMP}
+        {BEQ, A_REL}, {SBC, A_INY}, {SBC, A_INZ}, {INV, A_IMP}, {INV, A_IMP}, {SBC, A_ZPX}, {INC, A_ZPX}, {INV, A_IMP}, {SED, A_IMP}, {SBC, A_ABY}, {PLX, A_IMP}, {INV, A_IMP}, {INV, A_IMP}, {SBC, A_ABX}, {INC, A_ABX}, {INV, A_IMP}
 };
 
 static void
@@ -88,6 +88,10 @@ get_addr(int adm)
                         low = memory[pc++];
                         high = ++low % 0xFF;
                         return memory[low] + (memory[high] << 8) + y;
+                case A_INZ:
+                        low = memory[pc++];
+                        high = ++low % 0xFF;
+                        return memory[low] + (memory[high] << 8);
                 case A_REL:
                         offset = (int8_t) memory[pc++];
                         return pc + offset;
@@ -454,6 +458,14 @@ run_op(Opcode op)
                         ac = y;
                         setstat(NEGATIVE, ac & 0x80);
                         setstat(ZERO, !ac);
+                        return;
+                case TRB:
+                        memory[addr] &= ~ac;
+                        setstat(ZERO, ac & memory[addr]);
+                        return;
+                case TSB:
+                        memory[addr] |= ac;
+                        setstat(ZERO, ac & memory[addr]);
                         return;
                 case INV:
                         invalid_instruction = pc;
