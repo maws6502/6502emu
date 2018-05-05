@@ -3,20 +3,14 @@
 #define tbi(x, y) (x ^= 1 << y)
 #define gbi(x, y) ((x & 1 << y) >> y)
 #define setcon(x, y, exp) (exp ? sbi(x, y) : cbi(x, y))
-#define setstat(y, exp) setcon(sr, y, exp)
-#define getstat(x) gbi(sr, x)
+#define setstat(y, exp) setcon(dev->sr, y, exp)
+#define getstat(x) gbi(dev->sr, x)
 
-uint8_t memory[0x10000];
-void reset_cpu(void);
-void irq(void);
-void nmi(void);
-uint16_t cycle(void);
 
 struct opcode {
         int op;
         int adm;
 };
-
 typedef struct opcode Opcode;
 
 enum

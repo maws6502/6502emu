@@ -7,27 +7,29 @@
 #include <fcntl.h>
 #include <pthread.h>
 #include <termios.h>
-#include "emu.h"
+#include "cpu.h"
 
 char inchar = 0;
 
 void *
-runCPU()
+runCPU(void *i)
 {
+        Emu65Device *dev;
+        dev = (Emu65Device *) i;
         for(;;) {
                 uint16_t i;
-                if (i = cycle()) {
+                if (i = emu65_cycle(dev)) {
                         printf("INVALID INSTRUCTION. HALTING AT %x\n", i);
                         break;
                 }
-                if(memory[0xFF0F]) {
-                        printf("%c", (char) memory[0xFF0E]);
+                if(dev->memory[0xFF0F]) {
+                        printf("%c", (char) dev->memory[0xFF0E]);
                         fflush(stdout);
-                        memory[0xFF0F] = 0x00;
+                        dev->memory[0xFF0F] = 0x00;
                 }
-                if(inchar && !memory[0xFF0D]) {
-                        memory[0xFF0C] = inchar;
-                        memory[0xFF0D] = 1;
+                if(inchar && !dev->memory[0xFF0D]) {
+                        dev->memory[0xFF0C] = inchar;
+                        dev->memory[0xFF0D] = 1;
                         inchar = 0;
                 }
         }
@@ -40,6 +42,7 @@ main(int argc, char *argv[])
         struct stat st;
         int fd, i;
         pthread_t cputhread;
+        Emu65Device *dev;
         if (argc != 2){
                 printf("Need ROM\n");
                 return 1;
@@ -49,11 +52,12 @@ main(int argc, char *argv[])
                 printf("ROM must be exactly 16kb\n");
                 return 1;
         }
+        dev = malloc(sizeof(Emu65Device));
         fd = open(argv[1], O_RDONLY);
-        read(fd, memory + 0xC000, 0x4000);
+        read(fd, dev->memory + 0xC000, 0x4000);
         close(fd);
-        reset_cpu();
-        pthread_create(&cputhread, NULL, runCPU, (void *) 0);
+        emu65_reset(dev);
+        pthread_create(&cputhread, NULL, runCPU, (void *) dev);
 
         struct termios trm;
         tcgetattr(STDIN_FILENO, &trm);
