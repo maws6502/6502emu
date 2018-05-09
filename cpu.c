@@ -7,10 +7,6 @@
 #include "cpu.h"
 #include "cpu_intrn.h"
 
-static uint16_t pc;
-static uint8_t ac, x, y, sr, sp;
-
-
 /* acquired from http://e-tradition.net/bytes/6502/6502_instruction_set.html
  * http://www.6502.org/tutorials/65c02opcodes.html#2 
  * http://www.llx.com/~nparker/a2/opcodes.html */ 
@@ -188,8 +184,7 @@ emu65_run_op(Emu65Device *dev, Opcode op)
                         dev->pc++;
                         emu65_hws_push(dev, (dev->pc >> 8) & 0xFF);
                         emu65_hws_push(dev, dev->pc & 0xFF);
-                        setstat(BREAK, 1);
-                        emu65_hws_push(dev, dev->sr);
+                        emu65_hws_push(dev, dev->sr | 1<<BREAK);
                         setstat(INTERRUPT, 1);
                         dev->pc = dev->memory[0xFFFE] + (dev->memory[0xFFFF] << 8);
                         break;
@@ -217,19 +212,19 @@ emu65_run_op(Emu65Device *dev, Opcode op)
                         cbi(dev->sr, OVERFLOW);
                         break;
                 case CMP:
-                        tmp = dev->ac + dev->memory[addr];
+                        tmp = dev->ac - dev->memory[addr];
                         setstat(ZERO, !(tmp & 0xFF));
                         setstat(CARRY, tmp < 0x100);
                         setstat(NEGATIVE, tmp & 0x80);
                         break;
                 case CPX:
-                        tmp = dev->x + dev->memory[addr];
+                        tmp = dev->x - dev->memory[addr];
                         setstat(ZERO, !(tmp & 0xFF));
                         setstat(CARRY, tmp < 0x100);
                         setstat(NEGATIVE, tmp & 0x80);
                         break;
                 case CPY:
-                        tmp = dev->y + dev->memory[addr];
+                        tmp = dev->y - dev->memory[addr];
                         setstat(ZERO, !(tmp & 0xFF));
                         setstat(CARRY, tmp < 0x100);
                         setstat(NEGATIVE, tmp & 0x80);
@@ -332,7 +327,7 @@ emu65_run_op(Emu65Device *dev, Opcode op)
                         emu65_hws_push(dev, dev->y);
                         break;
                 case PHP:
-                        emu65_hws_push(dev, dev->sr);
+                        emu65_hws_push(dev, dev->sr | 1 << BREAK);
                         break;
                 case PLA:
                         dev->ac = emu65_hws_pop(dev);
@@ -350,7 +345,7 @@ emu65_run_op(Emu65Device *dev, Opcode op)
                         setstat(ZERO, !dev->y);
                         break;
                 case PLP:
-                        dev->sr = emu65_hws_pop(dev);
+                        dev->sr = (dev->sr & 1 << BRK) | emu65_hws_pop(dev) | 1 << _IGNORE;
                         break;
                 case ROL:
                         tmp = dev->memory[addr];
@@ -389,7 +384,7 @@ emu65_run_op(Emu65Device *dev, Opcode op)
                         dev->ac = tmp;
                         break;
                 case RTI:
-                        dev->sr = emu65_hws_pop(dev);
+                        dev->sr = (dev->sr & 1 << BRK) | emu65_hws_pop(dev) | 1 << _IGNORE;
                         dev->pc = emu65_hws_pop(dev);
                         dev->pc += emu65_hws_pop(dev) << 8;
                         break;
@@ -507,10 +502,10 @@ emu65_irq(Emu65Device *dev)
         if(!getstat(INTERRUPT)) {
                 emu65_hws_push(dev, (dev->pc >> 8) & 0xFF);
                 emu65_hws_push(dev, dev->pc & 0xFF);
-                emu65_hws_push(dev, dev->sr);
                 cbi(dev->sr, BREAK);
+                emu65_hws_push(dev, dev->sr);
                 sbi(dev->sr, INTERRUPT);
-                pc = (dev->memory[irqH] << 8) + dev->memory[irqL];
+                dev->pc = (dev->memory[irqH] << 8) + dev->memory[irqL];
         }
         return;
 }
@@ -520,9 +515,9 @@ emu65_nmi(Emu65Device *dev)
 {
         emu65_hws_push(dev, (dev->pc >> 8) & 0xFF);
         emu65_hws_push(dev, dev->pc & 0xFF);
-        emu65_hws_push(dev, dev->sr);
         cbi(dev->sr, BREAK);
+        emu65_hws_push(dev, dev->sr);
         sbi(dev->sr, INTERRUPT);
-        pc = (dev->memory[nmiH] << 8) + dev->memory[nmiL];
+        dev->pc = (dev->memory[nmiH] << 8) + dev->memory[nmiL];
         return;
 }

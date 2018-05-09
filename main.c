@@ -22,14 +22,14 @@ runCPU(void *i)
                         printf("INVALID INSTRUCTION. HALTING AT %x\n", i);
                         break;
                 }
-                if(dev->memory[0xFF0F]) {
-                        printf("%c", (char) dev->memory[0xFF0E]);
+                if(dev->memory[0x800F]) {
+                        printf("%c", (char) dev->memory[0x800E]);
                         fflush(stdout);
-                        dev->memory[0xFF0F] = 0x00;
+                        dev->memory[0x800F] = 0x00;
                 }
                 if(inchar && !dev->memory[0xFF0D]) {
-                        dev->memory[0xFF0C] = inchar;
-                        dev->memory[0xFF0D] = 1;
+                        dev->memory[0x800C] = inchar;
+                        dev->memory[0x800D] = 1;
                         inchar = 0;
                 }
         }
