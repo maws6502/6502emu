@@ -451,8 +451,6 @@ emu65_run_op(Emu65Device *dev, Opcode op)
                         break;
                 case TXS:
                         dev->sp = dev->x;
-                        setstat(NEGATIVE, dev->x & 0x80);
-                        setstat(ZERO, !dev->x);
                         break;
                 case TYA:
                         dev->ac = dev->y;
