@@ -82,16 +82,16 @@ emu65_get_addr(Emu65Device *dev, int adm)
                         effhigh = dev->memory[low + (high << 8) + 1 + dev->x];
                         return efflow + (effhigh << 8);
                 case A_INX:
-                        low = (dev->memory[dev->pc++] + dev->x) % 0xFF;
-                        high = ++low % 0xFF;
+                        low = (dev->memory[dev->pc++] + dev->x) & 0xFF;
+                        high = ++low & 0xFF;
                         return dev->memory[low] + (dev->memory[high] << 8);
                 case A_INY:
                         low = dev->memory[dev->pc++];
-                        high = ++low % 0xFF;
+                        high = ++low & 0xFF;
                         return dev->memory[low] + (dev->memory[high] << 8) + dev->y;
                 case A_INZ:
                         low = dev->memory[dev->pc++];
-                        high = ++low % 0xFF;
+                        high = ++low & 0xFF;
                         return dev->memory[low] + (dev->memory[high] << 8);
                 case A_REL:
                         offset = (int8_t) dev->memory[dev->pc++];
@@ -99,9 +99,9 @@ emu65_get_addr(Emu65Device *dev, int adm)
                 case A_ZPG:
                         return dev->memory[dev->pc++];
                 case A_ZPX:
-                        return (dev->memory[dev->pc++] + dev->x) % 0xFF;
+                        return (dev->memory[dev->pc++] + dev->x) & 0xFF;
                 case A_ZPY:
-                        return (dev->memory[dev->pc++] + dev->y) % 0xFF;
+                        return (dev->memory[dev->pc++] + dev->y) & 0xFF;
                 case A_ACC:
                 case A_IMP:
                 default:
@@ -184,7 +184,7 @@ emu65_run_op(Emu65Device *dev, Opcode op)
                         dev->pc++;
                         emu65_hws_push(dev, (dev->pc >> 8) & 0xFF);
                         emu65_hws_push(dev, dev->pc & 0xFF);
-                        emu65_hws_push(dev, dev->sr | 1<<BREAK);
+                        emu65_hws_push(dev, dev->sr | 1 << BREAK);
                         setstat(INTERRUPT, 1);
                         dev->pc = dev->memory[0xFFFE] + (dev->memory[0xFFFF] << 8);
                         break;
@@ -213,21 +213,21 @@ emu65_run_op(Emu65Device *dev, Opcode op)
                         break;
                 case CMP:
                         tmp = dev->ac - dev->memory[addr];
-                        setstat(ZERO, !(tmp & 0xFF));
-                        setstat(CARRY, tmp < 0x100);
                         setstat(NEGATIVE, tmp & 0x80);
+                        setstat(ZERO, dev->ac == dev->memory[addr]);
+                        setstat(CARRY, dev->ac >= dev->memory[addr]);
                         break;
                 case CPX:
                         tmp = dev->x - dev->memory[addr];
-                        setstat(ZERO, !(tmp & 0xFF));
-                        setstat(CARRY, tmp < 0x100);
                         setstat(NEGATIVE, tmp & 0x80);
+                        setstat(ZERO, dev->x == dev->memory[addr]);
+                        setstat(CARRY, dev->x >= dev->memory[addr]);
                         break;
                 case CPY:
                         tmp = dev->y - dev->memory[addr];
-                        setstat(ZERO, !(tmp & 0xFF));
-                        setstat(CARRY, tmp < 0x100);
                         setstat(NEGATIVE, tmp & 0x80);
+                        setstat(ZERO, dev->y == dev->memory[addr]);
+                        setstat(CARRY, dev->y >= dev->memory[addr]);
                         break;
                 case DEC:
                         dev->memory[addr]--;
@@ -345,7 +345,7 @@ emu65_run_op(Emu65Device *dev, Opcode op)
                         setstat(ZERO, !dev->y);
                         break;
                 case PLP:
-                        dev->sr = (dev->sr & 1 << BRK) | emu65_hws_pop(dev) | 1 << _IGNORE;
+                        dev->sr = getstat(BREAK) << BREAK | emu65_hws_pop(dev) | 1 << _IGNORE;
                         break;
                 case ROL:
                         tmp = dev->memory[addr];
@@ -384,7 +384,7 @@ emu65_run_op(Emu65Device *dev, Opcode op)
                         dev->ac = tmp;
                         break;
                 case RTI:
-                        dev->sr = (dev->sr & 1 << BRK) | emu65_hws_pop(dev) | 1 << _IGNORE;
+                        dev->sr = getstat(BREAK) << BREAK | emu65_hws_pop(dev) | 1 << _IGNORE;
                         dev->pc = emu65_hws_pop(dev);
                         dev->pc += emu65_hws_pop(dev) << 8;
                         break;
