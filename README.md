@@ -1,4 +1,3 @@
 # 6502emu
 
-It is a 6502 emulator. If I get bored I might write seperate the processor code from the device code. Or make it actually do stuff.
-
+Fully passes https://github.com/Klaus2m5/6502_65C02_functional_tests. 6502 emulator. Enjoy.

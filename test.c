@@ -10,7 +10,6 @@ main(int argc, char *argv[])
 {
         struct stat st;
         int fd, i;
-        pthread_t cputhread;
         Emu65Device *dev;
         if (argc != 2){
                 printf("Need ROM\n");
