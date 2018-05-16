@@ -34,7 +34,7 @@ static Opcode emu65_opc_table[0x100] = {
 static void
 emu65_hws_push(Emu65Device *dev, uint8_t val)
 {
-        dev->memory[0x100 + dev->sp] = val;
+        dev->memwrite(dev->param, 0x100 + dev->sp, val);
         if (dev->sp)
                 dev->sp--;
         else dev->sp = 0xFF;
@@ -46,7 +46,7 @@ emu65_hws_pop(Emu65Device *dev)
 {
        if (dev->sp == 0xFF) dev->sp = 0x0;
        else dev->sp++;
-       return dev->memory[0x100 + dev->sp];
+       return dev->memread(dev->param, 0x100 + dev->sp);
 }
 
 static uint16_t
@@ -56,52 +56,52 @@ emu65_get_addr(Emu65Device *dev, int adm)
         int8_t offset;
         switch (adm) {
                 case A_ABS:
-                        low = dev->memory[dev->pc++];
-                        high = dev->memory[dev->pc++];
+                        low = dev->memread(dev->param, dev->pc++);
+                        high = dev->memread(dev->param, dev->pc++);
                         return low | (high << 8);
                 case A_ABX:
-                        low = dev->memory[dev->pc++];
-                        high = dev->memory[dev->pc++];
+                        low = dev->memread(dev->param, dev->pc++);
+                        high = dev->memread(dev->param, dev->pc++);
                         return (low | (high << 8)) + dev->x;
                 case A_ABY:
-                        low = dev->memory[dev->pc++];
-                        high = dev->memory[dev->pc++];
+                        low = dev->memread(dev->param, dev->pc++);
+                        high = dev->memread(dev->param, dev->pc++);
                         return (low | (high << 8)) + dev->y;
                 case A_IMM:
                         return dev->pc++;
                 case A_IND:
-                        low = dev->memory[dev->pc++];
-                        high = dev->memory[dev->pc++];
-                        efflow = dev->memory[low | (high << 8)];
-                        effhigh = dev->memory[(low | (high << 8)) + 1];
+                        low = dev->memread(dev->param, dev->pc++);
+                        high = dev->memread(dev->param, dev->pc++);
+                        efflow = dev->memread(dev->param, low | (high << 8));
+                        effhigh = dev->memread(dev->param, (low | (high << 8)) + 1);
                         return efflow | (effhigh << 8);
                 case A_IAX:
-                        low = dev->memory[dev->pc++];
-                        high = dev->memory[dev->pc++];
-                        efflow = dev->memory[(low | (high << 8)) + dev->x];
-                        effhigh = dev->memory[(low | (high << 8)) + 1 + dev->x];
+                        low = dev->memread(dev->param, dev->pc++);
+                        high = dev->memread(dev->param, dev->pc++);
+                        efflow = dev->memread(dev->param, (low | (high << 8)) + dev->x);
+                        effhigh = dev->memread(dev->param, (low | (high << 8)) + 1 + dev->x);
                         return efflow | (effhigh << 8);
                 case A_INX:
-                        low = (dev->memory[dev->pc++] + dev->x) & 0x00FF;
+                        low = (dev->memread(dev->param, dev->pc++) + dev->x) & 0x00FF;
                         high = low + 1 & 0x00FF;
-                        return dev->memory[low] | (dev->memory[high] << 8);
+                        return dev->memread(dev->param, low) | (dev->memread(dev->param, high) << 8);
                 case A_INY:
-                        low = dev->memory[dev->pc++];
+                        low = dev->memread(dev->param, dev->pc++);
                         high = low + 1 & 0x00FF;
-                        return (dev->memory[low] | (dev->memory[high] << 8)) + dev->y;
+                        return (dev->memread(dev->param, low) | (dev->memread(dev->param, high) << 8)) + dev->y;
                 case A_INZ:
-                        low = dev->memory[dev->pc++];
+                        low = dev->memread(dev->param, dev->pc++);
                         high = ++low & 0x00FF;
-                        return dev->memory[low] | (dev->memory[high] << 8);
+                        return dev->memread(dev->param, low) | (dev->memread(dev->param, high) << 8);
                 case A_REL:
-                        offset = (int8_t) dev->memory[dev->pc++];
+                        offset = (int8_t) dev->memread(dev->param, dev->pc++);
                         return dev->pc + offset;
                 case A_ZPG:
-                        return dev->memory[dev->pc++];
+                        return dev->memread(dev->param, dev->pc++);
                 case A_ZPX:
-                        return (dev->memory[dev->pc++] + dev->x) & 0x00FF;
+                        return (dev->memread(dev->param, dev->pc++) + dev->x) & 0x00FF;
                 case A_ZPY:
-                        return (dev->memory[dev->pc++] + dev->y) & 0x00FF;
+                        return (dev->memread(dev->param, dev->pc++) + dev->y) & 0x00FF;
                 case A_ACC:
                 case A_IMP:
                 default:
@@ -118,7 +118,7 @@ emu65_run_op(Emu65Device *dev, Opcode op)
         switch (op.op){
                 case ADC:
                         /* stolen from https://github.com/gianlucag/mos6502 because */
-                        m = dev->memory[addr];
+                        m = dev->memread(dev->param, addr);
                         tmp = m + dev->ac + getstat(CARRY);
                         setstat(ZERO, !(tmp & 0xFF));
                         if (getstat(DECIMAL)) {
@@ -135,7 +135,7 @@ emu65_run_op(Emu65Device *dev, Opcode op)
                         dev->ac = tmp & 0xFF;
                         break;
                 case AND:
-                        dev->ac &= dev->memory[addr];
+                        dev->ac &= dev->memread(dev->param, addr);
                         setstat(NEGATIVE, dev->ac & 0x80);
                         setstat(ZERO, !dev->ac);
                         break;
@@ -146,10 +146,12 @@ emu65_run_op(Emu65Device *dev, Opcode op)
                         setstat(NEGATIVE, dev->ac & 0x80);
                         break;
                 case ASL:
-                        setstat(CARRY, dev->memory[addr] & 0x80);
-                        dev->memory[addr] <<= 1;
-                        setstat(ZERO, !dev->memory[addr]);
-                        setstat(NEGATIVE, dev->memory[addr] & 0x80);
+                        m = dev->memread(dev->param, addr);
+                        setstat(CARRY, m & 0x80);
+                        m <<= 1;
+                        setstat(ZERO, !m);
+                        setstat(NEGATIVE, m & 0x80);
+                        dev->memwrite(dev->param, addr, m);
                         break;
                 case BCC:
                         if(!getstat(CARRY))
@@ -164,8 +166,8 @@ emu65_run_op(Emu65Device *dev, Opcode op)
                                 dev->pc = addr;
                         break;
                 case BIT:
-                        setstat(ZERO, !(dev->ac & dev->memory[addr]));
-                        dev->sr = (dev->sr & 0x3F) | (dev->memory[addr] & 0xC0);
+                        setstat(ZERO, !(dev->ac & dev->memread(dev->param, addr)));
+                        dev->sr = (dev->sr & 0x3F) | (dev->memread(dev->param, addr) & 0xC0);
                         break;
                 case BMI:
                         if(getstat(NEGATIVE))
@@ -185,7 +187,7 @@ emu65_run_op(Emu65Device *dev, Opcode op)
                         emu65_hws_push(dev, dev->pc & 0xFF);
                         emu65_hws_push(dev, dev->sr | 1 << BREAK);
                         setstat(INTERRUPT, 1);
-                        dev->pc = dev->memory[0xFFFE] + (dev->memory[0xFFFF] << 8);
+                        dev->pc = dev->memread(dev->param, 0xFFFE) + (dev->memread(dev->param, 0xFFFF) << 8);
                         break;
                 case BVC:
                         if(!getstat(OVERFLOW))
@@ -211,27 +213,32 @@ emu65_run_op(Emu65Device *dev, Opcode op)
                         cbi(dev->sr, OVERFLOW);
                         break;
                 case CMP:
-                        tmp = dev->ac - dev->memory[addr];
+                        m = dev->memread(dev->param, addr);
+                        tmp = dev->ac - m;
                         setstat(NEGATIVE, tmp & 0x80);
-                        setstat(ZERO, dev->ac == dev->memory[addr]);
-                        setstat(CARRY, dev->ac >= dev->memory[addr]);
+                        setstat(ZERO, dev->ac == m);
+                        setstat(CARRY, dev->ac >= m);
                         break;
                 case CPX:
-                        tmp = dev->x - dev->memory[addr];
+                        m = dev->memread(dev->param, addr);
+                        tmp = dev->x - m;
                         setstat(NEGATIVE, tmp & 0x80);
-                        setstat(ZERO, dev->x == dev->memory[addr]);
-                        setstat(CARRY, dev->x >= dev->memory[addr]);
+                        setstat(ZERO, dev->x == m);
+                        setstat(CARRY, dev->x >= m);
                         break;
                 case CPY:
-                        tmp = dev->y - dev->memory[addr];
+                        m = dev->memread(dev->param, addr);
+                        tmp = dev->y - m;
                         setstat(NEGATIVE, tmp & 0x80);
-                        setstat(ZERO, dev->y == dev->memory[addr]);
-                        setstat(CARRY, dev->y >= dev->memory[addr]);
+                        setstat(ZERO, dev->y == m);
+                        setstat(CARRY, dev->y >= m);
                         break;
                 case DEC:
-                        dev->memory[addr]--;
-                        setstat(NEGATIVE, dev->memory[addr] & 0x80);
-                        setstat(ZERO, !dev->memory[addr]);
+                        m = dev->memread(dev->param, addr);
+                        m--;
+                        dev->memwrite(dev->param, addr, m);
+                        setstat(NEGATIVE, m & 0x80);
+                        setstat(ZERO, !m);
                         break;
                 case DEA:
                         dev->ac--;
@@ -249,14 +256,16 @@ emu65_run_op(Emu65Device *dev, Opcode op)
                         setstat(ZERO, !dev->y);
                         break;
                 case EOR:
-                        dev->ac ^= dev->memory[addr];
+                        dev->ac ^= dev->memread(dev->param, addr);
                         setstat(NEGATIVE, dev->ac & 0x80);
                         setstat(ZERO, !dev->ac);
                         break;
                 case INC:
-                        dev->memory[addr]++;
-                        setstat(NEGATIVE, dev->memory[addr] & 0x80);
-                        setstat(ZERO, !dev->memory[addr]);
+                        m = dev->memread(dev->param, addr);
+                        m++;
+                        dev->memwrite(dev->param, addr, m);
+                        setstat(NEGATIVE, m & 0x80);
+                        setstat(ZERO, !m);
                         break;
                 case INA:
                         dev->ac++;
@@ -283,17 +292,17 @@ emu65_run_op(Emu65Device *dev, Opcode op)
                         dev->pc = addr;
                         break;
                 case LDA:
-                        dev->ac = dev->memory[addr];
+                        dev->ac = dev->memread(dev->param, addr);
                         setstat(NEGATIVE, dev->ac & 0x80);
                         setstat(ZERO, !dev->ac);
                         break;
                 case LDX:
-                        dev->x = dev->memory[addr];
+                        dev->x = dev->memread(dev->param, addr);
                         setstat(NEGATIVE, dev->x & 0x80);
                         setstat(ZERO, !dev->x);
                         break;
                 case LDY:
-                        dev->y = dev->memory[addr];
+                        dev->y = dev->memread(dev->param, addr);
                         setstat(NEGATIVE, dev->y & 0x80);
                         setstat(ZERO, !dev->y);
                         break;
@@ -304,15 +313,17 @@ emu65_run_op(Emu65Device *dev, Opcode op)
                         setstat(ZERO, !dev->ac);
                         break;
                 case LSR:
-                        setstat(CARRY, dev->memory[addr] & 0x01);
-                        dev->memory[addr] >>= 1;
-                        setstat(NEGATIVE, dev->memory[addr] & 0x80);
-                        setstat(ZERO, !dev->memory[addr]);
+                        m = dev->memread(dev->param, addr);
+                        setstat(CARRY, m & 0x01);
+                        m >>= 1;
+                        dev->memwrite(dev->param, addr, m);
+                        setstat(NEGATIVE, m & 0x80);
+                        setstat(ZERO, !m);
                         break;
                 case NOP:
                         break;
                 case ORA:
-                        dev->ac |= dev->memory[addr];
+                        dev->ac |= dev->memread(dev->param, addr);
                         setstat(NEGATIVE, dev->ac & 0x80);
                         setstat(ZERO, !dev->ac);
                         break;
@@ -347,13 +358,13 @@ emu65_run_op(Emu65Device *dev, Opcode op)
                         dev->sr = (dev->sr & (1 << _IGNORE | 1 << BREAK)) | emu65_hws_pop(dev) & ~(1 << BREAK);
                         break;
                 case ROL:
-                        tmp = dev->memory[addr];
+                        tmp = dev->memread(dev->param, addr);
                         tmp <<= 1;
                         tmp |= getstat(CARRY);
                         setstat(CARRY, tmp > 0xFF);
                         setstat(NEGATIVE, tmp & 0x80);
                         setstat(ZERO, !tmp);
-                        dev->memory[addr] = tmp;
+                        dev->memwrite(dev->param, addr, tmp);
                         break;
                 case RLC:
                         tmp = dev->ac;
@@ -365,13 +376,13 @@ emu65_run_op(Emu65Device *dev, Opcode op)
                         dev->ac = tmp & 0xFF;
                         break;
                 case ROR:
-                        tmp = dev->memory[addr];
+                        tmp = dev->memread(dev->param, addr);
                         tmp |= getstat(CARRY) << 8;
                         setstat(CARRY, tmp & 0x01);
                         tmp >>= 1;
                         setstat(NEGATIVE, tmp & 0x80);
                         setstat(ZERO, !(tmp & 0xFF));
-                        dev->memory[addr] = tmp;
+                        dev->memwrite(dev->param, addr, tmp);
                         break;
                 case RRC:
                         tmp = dev->ac;
@@ -393,7 +404,7 @@ emu65_run_op(Emu65Device *dev, Opcode op)
                         dev->pc++;
                         break;
                 case SBC:
-                        m = dev->memory[addr];
+                        m = dev->memread(dev->param, addr);
                         tmp = dev->ac - m - (getstat(CARRY) ? 0 : 1);
                         setstat(NEGATIVE, tmp & 0x80);
                         setstat(ZERO, !(tmp & 0xFF));
@@ -417,16 +428,16 @@ emu65_run_op(Emu65Device *dev, Opcode op)
                         sbi(dev->sr, INTERRUPT);
                         break;
                 case STA:
-                        dev->memory[addr] = dev->ac;
+                        dev->memwrite(dev->param, addr, dev->ac);
                         break;
                 case STX:
-                        dev->memory[addr] = dev->x;
+                        dev->memwrite(dev->param, addr, dev->x);
                         break;
                 case STZ:
-                        dev->memory[addr] = 0x00;
+                        dev->memwrite(dev->param, addr, 0x00);
                         break;
                 case STY:
-                        dev->memory[addr] = dev->y;
+                        dev->memwrite(dev->param, addr, dev->y);
                         break;
                 case TAX:
                         dev->x = dev->ac;
@@ -457,12 +468,16 @@ emu65_run_op(Emu65Device *dev, Opcode op)
                         setstat(ZERO, !dev->ac);
                         break;
                 case TRB:
-                        dev->memory[addr] &= ~dev->ac;
-                        setstat(ZERO, dev->ac & dev->memory[addr]);
+                        m = dev->memread(dev->param, addr);
+                        m &= ~dev->ac;
+                        dev->memwrite(dev->param, addr, m);
+                        setstat(ZERO, dev->ac & m);
                         break;
                 case TSB:
-                        dev->memory[addr] |= dev->ac;
-                        setstat(ZERO, dev->ac & dev->memory[addr]);
+                        m = dev->memread(dev->param, addr);
+                        m |= dev->ac;
+                        dev->memwrite(dev->param, addr, m);
+                        setstat(ZERO, dev->ac & m);
                         break;
                 case INV:
                         return 0;
@@ -474,7 +489,7 @@ uint16_t
 emu65_cycle(Emu65Device *dev)
 {
         Opcode op;
-        op = emu65_opc_table[dev->memory[dev->pc++]];
+        op = emu65_opc_table[dev->memread(dev->param, dev->pc++)];
         if(emu65_run_op(dev, op)) return 0;
         else return dev->pc;
 }
@@ -482,7 +497,7 @@ emu65_cycle(Emu65Device *dev)
 void
 emu65_reset(Emu65Device *dev)
 {
-        dev->pc = (dev->memory[rstH] << 8) + dev->memory[rstL];
+        dev->pc = (dev->memread(dev->param, rstH) << 8) + dev->memread(dev->param, rstL);
         dev->ac = 0x00;
         dev->x = 0x00;
         dev->y = 0x00;
@@ -502,7 +517,7 @@ emu65_irq(Emu65Device *dev)
                 cbi(dev->sr, BREAK);
                 emu65_hws_push(dev, dev->sr);
                 sbi(dev->sr, INTERRUPT);
-                dev->pc = (dev->memory[irqH] << 8) + dev->memory[irqL];
+                dev->pc = (dev->memread(dev->param, irqH) << 8) + dev->memread(dev->param, irqL);
         }
         return;
 }
@@ -515,6 +530,6 @@ emu65_nmi(Emu65Device *dev)
         cbi(dev->sr, BREAK);
         emu65_hws_push(dev, dev->sr);
         sbi(dev->sr, INTERRUPT);
-        dev->pc = (dev->memory[nmiH] << 8) + dev->memory[nmiL];
+        dev->pc = (dev->memread(dev->param, nmiH) << 8) + dev->memread(dev->param, nmiL);
         return;
 }

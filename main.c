@@ -11,6 +11,19 @@
 
 char inchar = 0;
 
+uint8_t
+memread(uint8_t *mem, uint16_t addr)
+{
+        return mem[addr];
+}
+
+void
+memwrite(uint8_t *mem, uint16_t addr, uint8_t val)
+{
+        mem[addr] = val;
+        return;
+}
+
 void *
 runCPU(void *i)
 {
@@ -22,14 +35,14 @@ runCPU(void *i)
                         printf("INVALID INSTRUCTION. HALTING AT %x\n", i);
                         break;
                 }
-                if(dev->memory[0x800F]) {
-                        printf("%c", (char) dev->memory[0x800E]);
+                if(dev->memread(dev->param, 0x800F)) {
+                        printf("%c", (char) dev->memread(dev->param, 0x800E));
                         fflush(stdout);
-                        dev->memory[0x800F] = 0x00;
+                        dev->memwrite(dev->param, 0x800F, 0x00);
                 }
-                if(inchar && !dev->memory[0xFF0D]) {
-                        dev->memory[0x800C] = inchar;
-                        dev->memory[0x800D] = 1;
+                if(inchar && !dev->memread(dev->param, 0xFF0D)) {
+                        dev->memwrite(dev->param, 0x800C, inchar);
+                        dev->memwrite(dev->param, 0x800D, 1);
                         inchar = 0;
                 }
         }
@@ -43,6 +56,7 @@ main(int argc, char *argv[])
         int fd, i;
         pthread_t cputhread;
         Emu65Device *dev;
+        uint8_t mem[0x10000];
         if (argc != 2){
                 printf("Need ROM\n");
                 return 1;
@@ -54,8 +68,11 @@ main(int argc, char *argv[])
         }
         dev = malloc(sizeof(Emu65Device));
         fd = open(argv[1], O_RDONLY);
-        read(fd, dev->memory + 0xC000, 0x4000);
+        read(fd, mem + 0xC000, 0x4000);
         close(fd);
+        dev->memread = memread;
+        dev->memwrite = memwrite;
+        dev->param = mem;
         emu65_reset(dev);
         pthread_create(&cputhread, NULL, runCPU, (void *) dev);
 

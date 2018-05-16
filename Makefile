@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS =
+CFLAGS = -Wno-incompatible-pointer-types
 
 all: emu test
 

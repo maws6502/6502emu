@@ -1,7 +1,9 @@
 struct emu65_device {
         uint16_t pc;
         uint8_t ac, x, y, sr, sp;
-        uint8_t memory[0x10000];
+        void (*memwrite)(void *, uint16_t, uint8_t);
+        uint8_t (*memread)(void *, uint16_t);
+        void *param;
 };
 typedef struct emu65_device Emu65Device;
 
