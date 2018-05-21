@@ -73,7 +73,9 @@ enum
         LDY,
         LSR,
         LSC,
-        NOP,
+        NO1,
+        NO2,
+        NO3,
         ORA,
         PHA,
         PHP,
@@ -110,10 +112,41 @@ enum
         INA,
         DEA,
         TRB,
-        TSB
-
-
+        TSB,
+        RM0,
+        RM1,
+        RM2,
+        RM3,
+        RM4,
+        RM5,
+        RM6,
+        RM7,
+        SM0,
+        SM1,
+        SM2,
+        SM3,
+        SM4,
+        SM5,
+        SM6,
+        SM7,
+        BR0,
+        BR1,
+        BR2,
+        BR3,
+        BR4,
+        BR5,
+        BR6,
+        BR7,
+        BS0,
+        BS1,
+        BS2,
+        BS3,
+        BS4,
+        BS5,
+        BS6,
+        BS7,
 };
+
 enum {
         A_ACC,
         A_IMP,
@@ -129,5 +162,6 @@ enum {
         A_REL,
         A_ZPG,
         A_ZPX,
-        A_ZPY
+        A_ZPY,
+        A_ZPR
 };
