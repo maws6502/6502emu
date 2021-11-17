@@ -26,6 +26,7 @@ main(int argc, char *argv[])
         struct stat st;
         int fd, i;
         Emu65Device *dev;
+        unsigned long long instrc = 0;
         uint8_t mem[0x10000];
         if (argc != 2){
                 printf("Need ROM\n");
@@ -41,7 +42,12 @@ main(int argc, char *argv[])
         emu65_reset(dev);
         dev->pc = 0x0400;
         while(!emu65_cycle(dev)) {
-                printf("PC=%x AC=%x X=%x Y=%x SR=%x SP=%x\n", dev->pc, dev->ac, dev->x, dev->y, dev->sr, dev->sp); 
+                instrc++;
+                if(dev->pc == 0x3469) {
+                        printf("Success\n");
+                        printf("Instruction count %llu\n", instrc);
+                        break;
+                }
         }
 
         return 0;
